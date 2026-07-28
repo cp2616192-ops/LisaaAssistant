@@ -27,12 +27,16 @@ jobs:
       run: |
         if [ -d "Module4/LisaaAssistant" ]; then
           cp -r Module4/LisaaAssistant/* .
+        elif [ -d "./Module4/LisaaAssistant" ]; then
+          cp -r ./Module4/LisaaAssistant/* .
         elif [ -d "LisaaAssistant" ]; then
           cp -r LisaaAssistant/* .
         fi
 
     - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      run: |
+        find . -name "gradlew" -exec chmod +x {} \;
+        find . -name "gradlew" -exec cp {} . \;
 
     - name: Build APK
       run: ./gradlew assembleDebug -Dorg.gradle.daemon=false
