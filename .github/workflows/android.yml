@@ -19,16 +19,13 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Unzip Module4
+    - name: Unzip and Move Files
       run: |
         unzip -o Module4.zip.zip -d . || unzip -o Module4.zip -d .
-
-    - name: Move all files to root
-      run: |
-        find . -name "gradlew" -exec dirname {} \; | head -n 1 > gradlew_dir.txt
-        GRADLEW_DIR=$(cat gradlew_dir.txt)
-        if [ -n "$GRADLEW_DIR" ] && [ "$GRADLEW_DIR" != "." ]; then
-          cp -r $GRADLEW_DIR/* .
+        if [ -d "Module4/LisaaAssistant" ]; then
+          cp -rn Module4/LisaaAssistant/. .
+        elif [ -d "LisaaAssistant" ]; then
+          cp -rn LisaaAssistant/. .
         fi
         chmod +x gradlew
 
