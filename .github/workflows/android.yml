@@ -21,12 +21,20 @@ jobs:
 
     - name: Unzip Module4
       run: |
-        unzip -o Module4.zip -d .
+        unzip -o Module4.zip.zip -d . || unzip -o Module4.zip -d .
+
+    - name: Move files if nested
+      run: |
+        if [ -d "Module4/LisaaAssistant" ]; then
+          cp -r Module4/LisaaAssistant/* .
+        elif [ -d "LisaaAssistant" ]; then
+          cp -r LisaaAssistant/* .
+        fi
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
-    - name: Enable Echo Cancellation & Build APK
+    - name: Build APK
       run: ./gradlew assembleDebug -Dorg.gradle.daemon=false
 
     - name: Upload APK Artifact
