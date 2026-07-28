@@ -23,20 +23,14 @@ jobs:
       run: |
         unzip -o Module4.zip.zip -d . || unzip -o Module4.zip -d .
 
-    - name: Move files if nested
+    - name: Move all files to root
       run: |
-        if [ -d "Module4/LisaaAssistant" ]; then
-          cp -r Module4/LisaaAssistant/* .
-        elif [ -d "./Module4/LisaaAssistant" ]; then
-          cp -r ./Module4/LisaaAssistant/* .
-        elif [ -d "LisaaAssistant" ]; then
-          cp -r LisaaAssistant/* .
+        find . -name "gradlew" -exec dirname {} \; | head -n 1 > gradlew_dir.txt
+        GRADLEW_DIR=$(cat gradlew_dir.txt)
+        if [ -n "$GRADLEW_DIR" ] && [ "$GRADLEW_DIR" != "." ]; then
+          cp -r $GRADLEW_DIR/* .
         fi
-
-    - name: Grant execute permission for gradlew
-      run: |
-        find . -name "gradlew" -exec chmod +x {} \;
-        find . -name "gradlew" -exec cp {} . \;
+        chmod +x gradlew
 
     - name: Build APK
       run: ./gradlew assembleDebug -Dorg.gradle.daemon=false
