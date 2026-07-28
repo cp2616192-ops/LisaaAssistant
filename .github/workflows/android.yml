@@ -22,11 +22,9 @@ jobs:
     - name: Clean and Setup Project
       run: |
         unzip -o Module4.zip.zip -d extracted || unzip -o Module4.zip -d extracted
-        if [ -d "extracted/Module4/LisaaAssistant" ]; then
-          cp -r extracted/Module4/LisaaAssistant/* .
-        elif [ -d "extracted/LisaaAssistant" ]; then
-          cp -r extracted/LisaaAssistant/* .
-        fi
+        GRADLEW_PATH=$(find extracted -name "gradlew" | head -n 1)
+        PROJECT_ROOT=$(dirname "$GRADLEW_PATH")
+        cp -r "$PROJECT_ROOT"/* .
         chmod +x gradlew
 
     - name: Build APK
