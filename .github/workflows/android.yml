@@ -19,14 +19,12 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Unzip and Move Files
+    - name: Unzip and Setup
       run: |
         unzip -o Module4.zip.zip -d . || unzip -o Module4.zip -d .
-        if [ -d "Module4/LisaaAssistant" ]; then
-          cp -rn Module4/LisaaAssistant/. .
-        elif [ -d "LisaaAssistant" ]; then
-          cp -rn LisaaAssistant/. .
-        fi
+        GRADLE_PATH=$(find . -name "gradlew" | head -n 1)
+        ROOT_DIR=$(dirname "$GRADLE_PATH")
+        cp -r $ROOT_DIR/* .
         chmod +x gradlew
 
     - name: Build APK
