@@ -1,4 +1,4 @@
-name: Build Lisaa APK from Zip
+name: Build Lisaa APK
 
 on:
   push:
@@ -10,40 +10,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-    # Step 1: Zip file ko GitHub server par extract karna
-    - name: Unzip Project Archive
+    - name: Find and Extract Zip File
       run: |
-        if [ -f "Module4.zip" ]; then
-          echo "Unzipping Module4.zip..."
-          unzip -o Module4.zip
+        ZIP_FILE=$(find . -maxdepth 2 -iname "*.zip" | head -n 1)
+        if [ -n "$ZIP_FILE" ]; then
+          echo "Found zip file: $ZIP_FILE"
+          unzip -o "$ZIP_FILE"
+        else
+          echo "No zip file found!"
         fi
 
-    # Step 2: Java 17 Setup
     - name: Set up JDK 17
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    # Step 3: Gradle Execute Permission
-    - name: Grant execute permission for gradlew
+    - name: Setup Gradle Permission & Build
       run: |
-        find . -name "gradlew" -exec chmod +x {} \;
-
-    # Step 4: APK Build
-    - name: Build with Gradle
-      run: |
-        if [ -d "LisaaAssistant" ]; then
-          cd LisaaAssistant
+        GRADLEW_PATH=$(find . -name "gradlew" | head -n 1)
+        if [ -n "$GRADLEW_PATH" ]; then
+          GRADLE_DIR=$(dirname "$GRADLEW_PATH")
+          cd "$GRADLE_DIR"
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        else
+          echo "gradlew not found!"
+          exit 1
         fi
-        ./gradlew assembleDebug
 
-    # Step 5: Ready APK Artifact Upload
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
+    - name: Upload Finished APK
+      uses: actions/upload-artifact@v4
       with:
         name: Lisaa-APK
-        path: "**/app/build/outputs/apk/debug/app-debug.apk"
+        path: "**/app/build/outputs/apk/debug/*.apk"
         
