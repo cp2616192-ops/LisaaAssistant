@@ -19,7 +19,7 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Extract Zip and Build
+    - name: Extract Zip and Clean Code
       run: |
         rm -rf extracted_code
         mkdir extracted_code
@@ -29,6 +29,16 @@ jobs:
         else
           cp -r extracted_code/*/* . 2>/dev/null || true
         fi
+
+        # VoiceSpeaker.kt me line 150 ke baad ki duplicate lines automatically hatayein
+        VOICE_FILE=$(find app/src/main/java -name "VoiceSpeaker.kt" | head -n 1)
+        if [ -n "$VOICE_FILE" ]; then
+          sed -i '150,$d' "$VOICE_FILE"
+          echo "}" >> "$VOICE_FILE"
+        fi
+
+    - name: Build APK
+      run: |
         gradle wrapper --gradle-version 8.4
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon
