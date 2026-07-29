@@ -19,22 +19,26 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Clean and Setup Project
+    - name: Clean and Extract Project
       run: |
         rm -rf extracted
         mkdir extracted
         unzip -o Module4.zip.zip -d extracted || unzip -o Module4.zip -d extracted
         GRADLEW_PATH=$(find extracted -name "gradlew" | head -n 1)
-        PROJECT_ROOT=$(dirname "$GRADLEW_PATH")
-        rsync -av --exclude='*.zip' --exclude='extracted' "$PROJECT_ROOT/" .
+        PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+        cd "$PROJECT_DIR"
         chmod +x gradlew
-
-    - name: Build APK
-      run: ./gradlew assembleDebug -Dorg.gradle.daemon=false
+        ./gradlew assembleDebug -Dorg.gradle.daemon=false
+        
+    - name: Copy Built APK
+      run: |
+        APK_PATH=$(find extracted -name "app-debug.apk" | head -n 1)
+        mkdir -p build_output
+        cp "$APK_PATH" build_output/app-debug.apk
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Lisaa-APK
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: build_output/app-debug.apk
         
