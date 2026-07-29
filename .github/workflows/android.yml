@@ -19,6 +19,9 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
     - name: Set up Gradle
       uses: gradle/actions/setup-gradle@v3
 
@@ -28,7 +31,6 @@ jobs:
         mkdir extracted_code
         unzip -o *.zip -d extracted_code
         
-        # extracted_code me se app folder aur gradle files root par layein
         if [ -d "extracted_code/app" ]; then
           cp -r extracted_code/* .
         else
@@ -36,11 +38,5 @@ jobs:
         fi
 
     - name: Build APK with System Gradle
-      run: gradle assembleDebug --no-daemon
-
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: Lisaa-APK
-        path: app/build/outputs/apk/debug/app-debug.apk
-        
+      run: gradle assembleDebug --no-daemon --stacktrace
+      
