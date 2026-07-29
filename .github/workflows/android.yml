@@ -30,13 +30,68 @@ jobs:
         else
           cp -r extracted_code/*/* . 2>/dev/null || true
         fi
-        
-        # Automatic Gradle Wrapper generate karna (Compatible Version)
+
+    - name: Fix VoiceSpeaker.kt Duplicate Code
+      run: |
+        VOICE_FILE=$(find app/src/main/java -name "VoiceSpeaker.kt" | head -n 1)
+        if [ -f "$VOICE_FILE" ]; then
+          cat << 'EOF' > "$VOICE_FILE"
+package com.khanu.lisaa.voice
+
+import android.content.Context
+import android.speech.tts.TextToSpeech
+import android.util.Log
+import java.util.Locale
+
+class VoiceSpeaker(context: Context) : TextToSpeech.OnInitListener {
+
+    private var tts: TextToSpeech? = TextToSpeech(context, this)
+    private var isReady = false
+    private var pendingText: String? = null
+
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            val result = tts?.setLanguage(Locale("hi", "IN"))
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                tts?.language = Locale.US
+            }
+            isReady = true
+            Log.d("VoiceSpeaker", "TTS Engine Ready!")
+            
+            pendingText?.let {
+                speak(it)
+                pendingText = null
+            }
+        } else {
+            Log.e("VoiceSpeaker", "TTS Initialization Failed!")
+        }
+    }
+
+    fun speak(text: String) {
+        if (isReady) {
+            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "LisaaTTS")
+        } else {
+            pendingText = text
+        }
+    }
+
+    fun stop() {
+        tts?.stop()
+    }
+
+    fun shutdown() {
+        tts?.stop()
+        tts?.shutdown()
+    }
+}
+EOF
+        fi
+
+    - name: Setup Gradle Wrapper & Build APK
+      run: |
         gradle wrapper --gradle-version 8.4
         chmod +x gradlew
-
-    - name: Build APK with Wrapper
-      run: ./gradlew assembleDebug --no-daemon
+        ./gradlew assembleDebug --no-daemon
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
