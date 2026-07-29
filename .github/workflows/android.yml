@@ -19,13 +19,7 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-
-    - name: Set up Gradle
-      uses: gradle/actions/setup-gradle@v3
-
-    - name: Extract Zip and Prepare
+    - name: Extract Zip and Prepare Project
       run: |
         rm -rf extracted_code
         mkdir extracted_code
@@ -36,7 +30,17 @@ jobs:
         else
           cp -r extracted_code/*/* . 2>/dev/null || true
         fi
+        
+        # Automatic Gradle Wrapper generate karna (Compatible Version)
+        gradle wrapper --gradle-version 8.4
+        chmod +x gradlew
 
-    - name: Build APK with System Gradle
-      run: gradle assembleDebug --no-daemon --stacktrace
-      
+    - name: Build APK with Wrapper
+      run: ./gradlew assembleDebug --no-daemon
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Lisaa-APK
+        path: app/build/outputs/apk/debug/app-debug.apk
+        
