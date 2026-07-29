@@ -24,19 +24,17 @@ jobs:
         rm -rf extracted_code
         mkdir extracted_code
         unzip -o *.zip -d extracted_code
-        
         if [ -d "extracted_code/app" ]; then
           cp -r extracted_code/* .
         else
           cp -r extracted_code/*/* . 2>/dev/null || true
         fi
 
-    - name: Fix VoiceSpeaker.kt Duplicate Code
+    - name: Fix VoiceSpeaker File
       run: |
         VOICE_FILE=$(find app/src/main/java -name "VoiceSpeaker.kt" | head -n 1)
-        if [ -f "$VOICE_FILE" ]; then
-          cat << 'EOF' > "$VOICE_FILE"
-package com.khanu.lisaa.voice
+        if [ -n "$VOICE_FILE" ]; then
+          echo 'package com.khanu.lisaa.voice
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
@@ -83,11 +81,10 @@ class VoiceSpeaker(context: Context) : TextToSpeech.OnInitListener {
         tts?.stop()
         tts?.shutdown()
     }
-}
-EOF
+}' > "$VOICE_FILE"
         fi
 
-    - name: Setup Gradle Wrapper & Build APK
+    - name: Build APK
       run: |
         gradle wrapper --gradle-version 8.4
         chmod +x gradlew
