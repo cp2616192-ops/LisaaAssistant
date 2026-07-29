@@ -19,20 +19,24 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Clean & Extract Project
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: Extract Zip and Prepare
       run: |
         rm -rf extracted_code
         mkdir extracted_code
         unzip -o *.zip -d extracted_code
-        if [ -f extracted_code/gradlew ]; then
+        
+        # extracted_code me se app folder aur gradle files root par layein
+        if [ -d "extracted_code/app" ]; then
           cp -r extracted_code/* .
         else
-          cp -r extracted_code/*/* . 2>/dev/null || cp -r extracted_code/*/*/* . 2>/dev/null || true
+          cp -r extracted_code/*/* . 2>/dev/null || true
         fi
-        chmod +x gradlew
 
-    - name: Build APK
-      run: ./gradlew assembleDebug -Dorg.gradle.daemon=false
+    - name: Build APK with System Gradle
+      run: gradle assembleDebug --no-daemon
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
