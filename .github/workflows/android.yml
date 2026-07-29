@@ -30,11 +30,144 @@ jobs:
           cp -r extracted_code/*/* . 2>/dev/null || true
         fi
 
-    - name: Fix VoiceSpeaker File
+    - name: Fix VoiceSpeaker File Complete
       run: |
         VOICE_FILE=$(find app/src/main/java -name "VoiceSpeaker.kt" | head -n 1)
         if [ -n "$VOICE_FILE" ]; then
-          echo "cGFja2FnZSBjb20ua2hhbnUubGlzYWEudm9pY2UKCmltcG9ydCBhbmRyb2lkLmNvbnRlbnQuQ29udGV4dAppbXBvcnQgYW5kcm9pZC5zcGVlY2gudHRzLlRleHRUb1NwZWVjaAppbXBvcnQgYW5kcm9pZC51dGlsLkxvZwppbXBvcnQgamF2YS51dGlsLkxvY2FsZQoKY2xhc3MgVm9pY2VTcGVha2VyKGNvbnRleHQ6IENvbnRleHQpIDogVGV4dFRvU3BlZWNoLk9uSW5pdExpc3RlbmVyIHsKCiAgICBwcml2YXRlIHZhciB0dHM6IFRleHRUb1NwZWVjaD8gPSBUZXh0VG9TcGVlY2goY29udGV4dCwgdGhpcykKICAgIHByaXZhdGUgdmFyIGlzUmVhZHkgPSBmYWxzZQogICAgcHJpdmF0ZSB2YXIgcGVuZGluZ1RleHQ6IFN0cmluZz8gPSBudWxsCgogICAgb3ZlcnJpZGUgZnVuIG9uSW5pdChzdGF0dXM6IEludCkgewogICAgICAgIGlmIChzdGF0dXMgPT0gVGV4dFRvU3BlZWNoLlNVQ0NFU1MpIHsKICAgICAgICAgICAgdmFsIHJlc3VsdCA9IHR0cz8uc2V0TGFuZ3VhZ2UoTG9jYWxlKCJoaSIsICJJTiIpKQogICAgICAgICAgICBpZiAocmVzdWx0ID09IFRleHRUb1NwZWVjaC5MQU5HX01JU1NJTkdfREFUQSB8fCByZXN1bHQgPT0gVGV4dFRvU3BlZWNoLkxBTkdfTk9UX1NVUFBPUlRFRCkgewogICAgICAgICAgICAgICAgdHRzPy5sYW5ndWFnZSA9IExvY2FsZS5VUwogICAgICAgICAgICB9CiAgICAgICAgICAgIGlzUmVhZHkgPSB0cnVlCiAgICAgICAgICAgIExvZy5kKCJWb2ljZVNwZWFrZXIiLCAiVFRTIEVuZ2luZSBSZWFkeSEiKQogICAgICAgICAgICAKICAgICAgICAgICAgcGVuZGluZ1RleHQ/LmxldCB7CiAgICAgICAgICAgICAgICBzcGVhayhpdCkKICAgICAgICAgICAgICAgIHBlbmRpbmdUZXh0ID0gbnVsbAogICAgICAgICAgICB9CiAgICAgICAgfSBlbHNlIHsKICAgICAgICAgICAgTG9nLmUoIlZvaWNlU3BlYWtlciIsICJUVFMgSW5pdGlhbGl6YXRpb24gRmFpbGVkISIpCiAgICAgICAgfQogICAgfQoKICAgIGZ1biBzcGVhayh0ZXh0OiBTdHJpbmcpIHsKICAgICAgICBpZiAoaXNSZWFkeSkgewogICAgICAgICAgICB0dHM/LnNwZWFrKHRleHQsIFRleHRUb1NwZWVjaC5RVUVVRV9GTVVTSCwgbnVsbCwgIkxpc2FhVFRTIikKICAgICAgICB9IGVsc2UgewogICAgICAgICAgICBwZW5kaW5nVGV4dCA9IHRleHQKICAgICAgICB9CiAgICB9CgogICAgZnVuIHN0b3AoKSB7CiAgICAgICAgdHRzPy5zdG9wKCkKICAgIH0KCiAgICBmdW4gc2h1dGRvd24oKSB7CiAgICAgICAgdHRzPy5zdG9wKCkKICAgICAgICB0dHM/LnNodXRkb3duKCkKICAgIH0KfQ==" | base64 -d > "$VOICE_FILE"
+          cat << 'EOF' > "$VOICE_FILE"
+package com.khanu.lisaa.voice
+
+import android.content.Context
+import android.media.AudioManager
+import android.os.Handler
+import android.os.Looper
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
+import android.speech.tts.Voice
+import com.khanu.lisaa.personality.Mood
+import com.khanu.lisaa.util.Constants
+import java.util.Locale
+import kotlin.random.Random
+
+class VoiceSpeaker(
+    context: Context,
+    private val onReadyToListenAgain: () -> Unit = {}
+) : TextToSpeech.OnInitListener {
+
+    private var tts: TextToSpeech? = null
+    private val handler = Handler(Looper.getMainLooper())
+    private var ready = false
+    private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+
+    private val focusChangeListener = AudioManager.OnAudioFocusChangeListener { }
+
+    init {
+        tts = TextToSpeech(context, this)
+    }
+
+    override fun onInit(status: Int) {
+        if (status != TextToSpeech.SUCCESS) return
+        tts?.language = Locale("hi", "IN")
+        selectFemaleVoiceIfAvailable()
+        tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(utteranceId: String?) {}
+            override fun onDone(utteranceId: String?) {
+                abandonAudioFocus()
+                handler.postDelayed({ onReadyToListenAgain() }, 250)
+            }
+
+            override fun onError(utteranceId: String?) {
+                abandonAudioFocus()
+                handler.postDelayed({ onReadyToListenAgain() }, 250)
+            }
+        })
+        ready = true
+    }
+
+    private fun selectFemaleVoiceIfAvailable() {
+        val engine = tts ?: return
+        val candidate: Voice? = runCatching {
+            engine.voices?.firstOrNull {
+                it.locale.language == "hi" && it.name.lowercase(Locale.US).contains("female")
+            } ?: engine.voices?.firstOrNull {
+                it.locale.language == "en" && it.name.lowercase(Locale.US).contains("female")
+            }
+        }.getOrNull()
+        candidate?.let { engine.voice = it }
+    }
+
+    fun speak(text: String, mood: Mood = Mood.NEUTRAL) {
+        if (!ready) {
+            handler.postDelayed({ speak(text, mood) }, 300)
+            return
+        }
+        val lengthBonus = text.length.coerceAtMost(120) * 2L
+        val baseDelay = Random.nextLong(Constants.THINKING_DELAY_MIN_MS, Constants.THINKING_DELAY_MAX_MS)
+        val thinkingDelay = baseDelay + lengthBonus
+
+        handler.postDelayed({
+            requestAudioFocus()
+            applyMoodTone(mood)
+            val utteranceId = "${Constants.TTS_UTTERANCE_ID}_${System.nanoTime()}"
+
+            val maxLen = TextToSpeech.getMaxSpeechInputLength()
+            val safeText = if (text.length > maxLen) text.take((maxLen - 1).coerceAtLeast(0)) else text
+
+            tts?.playSilentUtterance(breathPauseFor(mood), TextToSpeech.QUEUE_FLUSH, null)
+            tts?.speak(safeText, TextToSpeech.QUEUE_ADD, null, utteranceId)
+        }, thinkingDelay)
+    }
+
+    fun speak(text: String) {
+        speak(text, Mood.NEUTRAL)
+    }
+
+    private fun breathPauseFor(mood: Mood): Long = when (mood) {
+        Mood.SAD, Mood.LONELY, Mood.TIRED -> Constants.BREATH_PAUSE_MAX_MS
+        Mood.EXCITED, Mood.HAPPY -> Constants.BREATH_PAUSE_MIN_MS
+        else -> (Constants.BREATH_PAUSE_MIN_MS + Constants.BREATH_PAUSE_MAX_MS) / 2
+    }
+
+    private fun applyMoodTone(mood: Mood) {
+        val (pitch, rate) = when (mood) {
+            Mood.SAD, Mood.LONELY, Mood.TIRED -> 0.95f to 0.90f
+            Mood.HAPPY -> 1.08f to 1.05f
+            Mood.EXCITED -> 1.12f to 1.10f
+            Mood.ANGRY -> 0.98f to 0.95f
+            Mood.WORKING -> 1.0f to 1.0f
+            Mood.RELAXED -> 1.0f to 0.95f
+            Mood.NEUTRAL -> 1.02f to 1.0f
+        }
+        tts?.setPitch(pitch)
+        tts?.setSpeechRate(rate)
+    }
+
+    private fun requestAudioFocus() {
+        @Suppress("DEPRECATION")
+        audioManager?.requestAudioFocus(
+            focusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
+        )
+    }
+
+    private fun abandonAudioFocus() {
+        @Suppress("DEPRECATION")
+        audioManager?.abandonAudioFocus(focusChangeListener)
+    }
+
+    fun stop() {
+        abandonAudioFocus()
+        tts?.stop()
+        handler.removeCallbacksAndMessages(null)
+    }
+
+    fun shutdown() {
+        abandonAudioFocus()
+        tts?.stop()
+        tts?.shutdown()
+        handler.removeCallbacksAndMessages(null)
+    }
+}
+EOF
         fi
 
     - name: Build APK
