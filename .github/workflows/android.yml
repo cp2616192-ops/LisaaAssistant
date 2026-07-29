@@ -19,7 +19,7 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Extract Zip and Clean Code
+    - name: Extract Zip and Fix Voice Bug Automatically
       run: |
         rm -rf extracted_code
         mkdir extracted_code
@@ -30,12 +30,19 @@ jobs:
           cp -r extracted_code/*/* . 2>/dev/null || true
         fi
 
-        # VoiceSpeaker.kt me line 150 ke baad ki duplicate lines automatically hatayein
-        VOICE_FILE=$(find app/src/main/java -name "VoiceSpeaker.kt" | head -n 1)
-        if [ -n "$VOICE_FILE" ]; then
-          sed -i '150,$d' "$VOICE_FILE"
-          echo "}" >> "$VOICE_FILE"
-        fi
+        # VoiceRecognizer.kt me se 15 second delay wala bug autometically fix karein
+        python3 -c '
+        import glob
+        files = glob.glob("app/src/main/java/**/VoiceRecognizer.kt", recursive=True)
+        if files:
+            path = files[0]
+            with open(path, "r") as f:
+                lines = f.readlines()
+            new_lines = [line for line in lines if "EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS" not in line]
+            with open(path, "w") as f:
+                f.writelines(new_lines)
+            print("VoiceRecognizer bug fixed successfully!")
+        '
 
     - name: Build APK
       run: |
@@ -48,5 +55,4 @@ jobs:
       with:
         name: Lisaa-APK
         path: app/build/outputs/apk/debug/app-debug.apk
-
         
