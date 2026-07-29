@@ -34,54 +34,7 @@ jobs:
       run: |
         VOICE_FILE=$(find app/src/main/java -name "VoiceSpeaker.kt" | head -n 1)
         if [ -n "$VOICE_FILE" ]; then
-          echo 'package com.khanu.lisaa.voice
-
-import android.content.Context
-import android.speech.tts.TextToSpeech
-import android.util.Log
-import java.util.Locale
-
-class VoiceSpeaker(context: Context) : TextToSpeech.OnInitListener {
-
-    private var tts: TextToSpeech? = TextToSpeech(context, this)
-    private var isReady = false
-    private var pendingText: String? = null
-
-    override fun onInit(status: Int) {
-        if (status == TextToSpeech.SUCCESS) {
-            val result = tts?.setLanguage(Locale("hi", "IN"))
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                tts?.language = Locale.US
-            }
-            isReady = true
-            Log.d("VoiceSpeaker", "TTS Engine Ready!")
-            
-            pendingText?.let {
-                speak(it)
-                pendingText = null
-            }
-        } else {
-            Log.e("VoiceSpeaker", "TTS Initialization Failed!")
-        }
-    }
-
-    fun speak(text: String) {
-        if (isReady) {
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "LisaaTTS")
-        } else {
-            pendingText = text
-        }
-    }
-
-    fun stop() {
-        tts?.stop()
-    }
-
-    fun shutdown() {
-        tts?.stop()
-        tts?.shutdown()
-    }
-}' > "$VOICE_FILE"
+          echo "cGFja2FnZSBjb20ua2hhbnUubGlzYWEudm9pY2UKCmltcG9ydCBhbmRyb2lkLmNvbnRlbnQuQ29udGV4dAppbXBvcnQgYW5kcm9pZC5zcGVlY2gudHRzLlRleHRUb1NwZWVjaAppbXBvcnQgYW5kcm9pZC51dGlsLkxvZwppbXBvcnQgamF2YS51dGlsLkxvY2FsZQoKY2xhc3MgVm9pY2VTcGVha2VyKGNvbnRleHQ6IENvbnRleHQpIDogVGV4dFRvU3BlZWNoLk9uSW5pdExpc3RlbmVyIHsKCiAgICBwcml2YXRlIHZhciB0dHM6IFRleHRUb1NwZWVjaD8gPSBUZXh0VG9TcGVlY2goY29udGV4dCwgdGhpcykKICAgIHByaXZhdGUgdmFyIGlzUmVhZHkgPSBmYWxzZQogICAgcHJpdmF0ZSB2YXIgcGVuZGluZ1RleHQ6IFN0cmluZz8gPSBudWxsCgogICAgb3ZlcnJpZGUgZnVuIG9uSW5pdChzdGF0dXM6IEludCkgewogICAgICAgIGlmIChzdGF0dXMgPT0gVGV4dFRvU3BlZWNoLlNVQ0NFU1MpIHsKICAgICAgICAgICAgdmFsIHJlc3VsdCA9IHR0cz8uc2V0TGFuZ3VhZ2UoTG9jYWxlKCJoaSIsICJJTiIpKQogICAgICAgICAgICBpZiAocmVzdWx0ID09IFRleHRUb1NwZWVjaC5MQU5HX01JU1NJTkdfREFUQSB8fCByZXN1bHQgPT0gVGV4dFRvU3BlZWNoLkxBTkdfTk9UX1NVUFBPUlRFRCkgewogICAgICAgICAgICAgICAgdHRzPy5sYW5ndWFnZSA9IExvY2FsZS5VUwogICAgICAgICAgICB9CiAgICAgICAgICAgIGlzUmVhZHkgPSB0cnVlCiAgICAgICAgICAgIExvZy5kKCJWb2ljZVNwZWFrZXIiLCAiVFRTIEVuZ2luZSBSZWFkeSEiKQogICAgICAgICAgICAKICAgICAgICAgICAgcGVuZGluZ1RleHQ/LmxldCB7CiAgICAgICAgICAgICAgICBzcGVhayhpdCkKICAgICAgICAgICAgICAgIHBlbmRpbmdUZXh0ID0gbnVsbAogICAgICAgICAgICB9CiAgICAgICAgfSBlbHNlIHsKICAgICAgICAgICAgTG9nLmUoIlZvaWNlU3BlYWtlciIsICJUVFMgSW5pdGlhbGl6YXRpb24gRmFpbGVkISIpCiAgICAgICAgfQogICAgfQoKICAgIGZ1biBzcGVhayh0ZXh0OiBTdHJpbmcpIHsKICAgICAgICBpZiAoaXNSZWFkeSkgewogICAgICAgICAgICB0dHM/LnNwZWFrKHRleHQsIFRleHRUb1NwZWVjaC5RVUVVRV9GTVVTSCwgbnVsbCwgIkxpc2FhVFRTIikKICAgICAgICB9IGVsc2UgewogICAgICAgICAgICBwZW5kaW5nVGV4dCA9IHRleHQKICAgICAgICB9CiAgICB9CgogICAgZnVuIHN0b3AoKSB7CiAgICAgICAgdHRzPy5zdG9wKCkKICAgIH0KCiAgICBmdW4gc2h1dGRvd24oKSB7CiAgICAgICAgdHRzPy5zdG9wKCkKICAgICAgICB0dHM/LnNodXRkb3duKCkKICAgIH0KfQ==" | base64 -d > "$VOICE_FILE"
         fi
 
     - name: Build APK
