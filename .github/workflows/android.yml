@@ -19,17 +19,16 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Clean and Extract Project
+    - name: Clean, Extract and Build APK
       run: |
         rm -rf extracted
         mkdir extracted
         unzip -o Module4.zip.zip -d extracted || unzip -o Module4.zip -d extracted
-        GRADLEW_PATH=$(find extracted -name "gradlew" | head -n 1)
-        PROJECT_DIR=$(dirname "$GRADLEW_PATH")
-        cd "$PROJECT_DIR"
-        chmod +x gradlew
-        ./gradlew assembleDebug -Dorg.gradle.daemon=false
-        
+        GRADLEW_FILE=$(find extracted -name "gradlew" | head -n 1)
+        PROJECT_DIR=$(dirname "$GRADLEW_FILE")
+        chmod +x "$GRADLEW_FILE"
+        bash -c "cd '$PROJECT_DIR' && ./gradlew assembleDebug -Dorg.gradle.daemon=false"
+
     - name: Copy Built APK
       run: |
         APK_PATH=$(find extracted -name "app-debug.apk" | head -n 1)
