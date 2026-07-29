@@ -21,7 +21,7 @@ jobs:
 
     - name: Extract Zip and Build
       run: |
-        unzip -o *.zip -d extracted_code
+        unzip -o Module4.zip.zip -d extracted_code
         GRADLEW_PATH=$(find extracted_code -name "gradlew" | head -n 1)
         PROJECT_DIR=$(dirname "$GRADLEW_PATH")
         cd "$PROJECT_DIR"
