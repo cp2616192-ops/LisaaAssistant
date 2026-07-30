@@ -1,8 +1,8 @@
-name: Build Android APK
+name: Build APK from ZIP
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
@@ -10,53 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-    - name: Extract Zip and Fix Voice Bug Automatically
-      run: |
-        rm -rf extracted_code
-        mkdir extracted_code
-        unzip -o *.zip -d extracted_code
-        if [ -d "extracted_code/app" ]; then
-          cp -r extracted_code/* .
-        else
-          cp -r extracted_code/*/* . 2>/dev/null || true
-        fi
+      - name: Extract Project ZIP
+        run: |
+          unzip -o *.zip -d extracted_project
+          cp -r extracted_project/*/* . || cp -r extracted_project/* .
+          chmod +x gradlew
 
-        # VoiceRecognizer.kt me se 15 second delay wala bug autometically fix karein
-        python3 -c '
-        import glob
-        files = glob.glob("app/src/main/java/**/VoiceRecognizer.kt", recursive=True)
-        if files:
-            path = files[0]
-            with open(path, "r") as f:
-                lines = f.readlines()
-            new_lines = [line for line in lines if "EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS" not in line]
-            with open(path, "w") as f:
-                f.writelines(new_lines)
-            print("VoiceRecognizer bug fixed successfully!")
-        '
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
 
-    - name: Build APK
-      run: |
-        gradle wrapper --gradle-version 8.4
-        chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon
-
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: Lisaa-APK
-        path: app/build/outputs/apk/debug/app-debug.apk
-
-
-
-
-        
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+          
